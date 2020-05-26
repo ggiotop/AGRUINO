@@ -1,0 +1,102 @@
+#include <DHT.h>
+#include <Wire.h> 
+#include <LiquidCrystal_I2C.h>
+
+#define DHTPIN 5
+#define DHTTYPE DHT11 
+DHT dht(DHTPIN, DHTTYPE);
+
+#define SensorPin A0
+int dryValue = 0;
+int wetValue = 1023;
+int friendlyDryValue = 0;
+int friendlyWetValue = 100; 
+
+LiquidCrystal_I2C lcd(0x27, 2, 1, 0, 4, 5, 6, 7, 3, POSITIVE); 
+
+int buzzer = 9;
+int ledpinRed = 12;
+int ledpinGreen = 13;
+
+void setup() {
+
+    Serial.begin(9600); 
+    pinMode (buzzer, OUTPUT);
+    lcd.begin(16,2);
+    dht.begin();
+    pinMode(ledpinRed, OUTPUT);
+    pinMode(ledpinGreen, OUTPUT);
+
+}
+
+void loop() {
+
+  int temp = dht.readTemperature(); 
+  int hum = dht.readHumidity();
+  int rawValue = analogRead(A0);
+  int friendlyValue = map(rawValue, dryValue, wetValue, friendlyDryValue, friendlyWetValue);
+
+    Serial.print("S1:"); Serial.println(temp); 
+    Serial.print("S2:");  Serial.println(hum);
+    Serial.print("S3:");  Serial.println(rawValue);
+    Serial.print("S4:"); Serial.println(friendlyValue);
+
+    if (rawValue > 900) {
+
+          lcd.clear();
+          lcd.setCursor(0,0);
+          lcd.print("T:");lcd.print(temp);lcd.print((char)223);lcd.print("C");lcd.print(" | ");lcd.print("H:");lcd.print(hum);lcd.print("%");
+          lcd.setCursor(0,1);
+          lcd.print("Soil:DRY");lcd.print(" ");lcd.print(friendlyValue);lcd.print("%");
+
+          if (hum < 40) {
+
+            for (int i = 0; i < 100; i++) { 
+              digitalWrite(buzzer, HIGH);
+              digitalWrite(ledpinRed, HIGH);
+              delay(1);
+              digitalWrite(buzzer, LOW);
+              digitalWrite(ledpinRed, LOW);
+              delay(1);
+            }
+            digitalWrite(ledpinGreen, LOW);
+          } else {
+            
+            digitalWrite(ledpinGreen, HIGH);
+          }
+
+      } else if (rawValue > 500){
+
+            lcd.clear();
+            lcd.setCursor(0,0);
+            lcd.print("T:");lcd.print(temp);lcd.print((char)223);lcd.print("C");lcd.print(" | ");lcd.print("H:");lcd.print(hum);lcd.print("%");
+            lcd.setCursor(0,1);
+            lcd.print("Soil:NORMAL");lcd.print(" ");lcd.print(friendlyValue);lcd.print("%");
+
+            digitalWrite(ledpinGreen, HIGH);
+    
+        } else {
+
+            lcd.clear();
+            lcd.setCursor(0,0);
+            lcd.print("T:");lcd.print(temp);lcd.print((char)223);lcd.print("C");lcd.print(" | ");lcd.print("H:");lcd.print(hum);lcd.print("%");
+            lcd.setCursor(0,1);
+            lcd.print("Soil:WET");lcd.print(" ");lcd.print(100 - friendlyValue);lcd.print("%");
+
+            digitalWrite(ledpinGreen, HIGH);
+          
+          }
+
+  if (isnan(temp) || isnan(hum)) {
+    Serial.println("Failed to read from DHT sensor!");
+    return;
+  }
+
+    if (isnan(rawValue) || isnan(friendlyValue)) {
+    Serial.println("Failed to read from Soil sensor!");
+    return;
+  }
+
+   delay(5000);
+     
+  }

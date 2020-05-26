@@ -1,0 +1,25 @@
+#include <Servo.h>
+int pos = 0;
+Servo servo_9;
+void setup()
+{
+servo_9.attach(9);
+}
+void loop()
+{ // sweep the servo from 0 to 95 degrees in steps
+// of 1 degrees
+for (pos = 0; pos <= 95; pos += 1) {
+// tell servo to go to position in variable 'pos'
+servo_9.write(pos);
+// wait 25 ms for servo to reach the position
+delay(25); // Wait for 25 millisecond(s)(ρυθμός ταχύτητας κίνησης βραχίονα στο “κατέβασμα”)
+}
+delay(2000); // wait 2000 millisecond(s) ( αναμονή για συλλογή δεδομένων από το έδαφος πριν την επαναφορά στην αρχική θέση)
+for (pos = 95; pos >= 0; pos -= 1) {
+// tell servo to go to position in variable 'pos'
+servo_9.write(pos);
+// wait 15 ms for servo to reach the position
+delay(15); // Wait for 15 millisecond(s) (ρυθμός ταχύτητας κίνησης βραχίονα στην επαναφορά)
+}
+delay(2000); ( αναμονή μέχρι το επόμενο “κατέβασμα” του βραχίονα για συλλογή δεδομένων)
+}
